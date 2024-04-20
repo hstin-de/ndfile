@@ -19,6 +19,28 @@ See: [File Format](docs/file_format.md) for more information on the file format.
 
 ## Installation
 
+### Prerequisites
+
+- eccodes.h
+- Go 1.21 or higher (could work with older versions, but not tested)
+
+
+### Installing ecCodes (Debian-based systems)
+
+`ndfile` relies on [ecCodes](https://confluence.ecmwf.int/display/ECC/), a GRIB decoding library by the European Centre for Medium-Range Weather Forecasts (ECMWF), to process GRIB files. Ensure you have ecCodes installed on your system before using `ndfile`.
+
+```bash	
+sudo apt-get install libeccodes-dev
+```
+The Cgo bindings expect the ecCodes library to be installed in the default location `/usr/include/x86_64-linux-gnu/` on Linux systems. If you have installed ecCodes in a different location, you can edit the `CGO_CFLAGS` and `CGO_LDFLAGS` flags in [eccodes.go](eccodes.go) to point to the correct location.
+
+
+Other then that, the package is self-contained and does not require any additional dependencies other than the standard Go libraries.
+
+
+
+### Installing the Package
+
 ```bash
 go get github.com/hstin-de/ndfile
 ```
