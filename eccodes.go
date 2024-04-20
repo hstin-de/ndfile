@@ -15,7 +15,7 @@ import (
 
 // GRIBFile struct to hold GRIB data information
 type GRIBFile struct {
-	Type               DataType  `json:"type"`
+	Type               int32     `json:"type"`
 	Nx                 int       `json:"nx"`
 	Ny                 int       `json:"ny"`
 	La1                float64   `json:"la1"`
@@ -32,9 +32,6 @@ type GRIBFile struct {
 	DistinctLongitudes []float64 `json:"distinctLongitudes"`
 }
 
-var GRIBTypeLookup = map[string]DataType{
-	"0-0-0": TYPE_TEMPERATURE,
-}
 
 func ProcessGRIB(gribData []byte) GRIBFile {
 	dataPtr := unsafe.Pointer(&gribData[0])
@@ -87,12 +84,7 @@ func ProcessGRIB(gribData []byte) GRIBFile {
 	C.codes_get_long(gid, C.CString("parameterCategory"), &parameterCategory)
 	C.codes_get_long(gid, C.CString("parameterNumber"), &parameterNumber)
 
-	gribType := fmt.Sprintf("%d-%d-%d", discipline, parameterCategory, parameterNumber)
-
-	if _, ok := GRIBTypeLookup[gribType]; !ok {
-		fmt.Printf("Unsupported GRIB type: %s\n", gribType)
-		return GRIBFile{}
-	}
+	gribType := int32((discipline & 0xFF) | ((parameterCategory & 0xFF) << 8) | ((parameterNumber & 0xFF) << 16))
 
 	latitudes := make([]float64, ny)
 	C.codes_get_double_array(gid, C.CString("distinctLatitudes"), (*C.double)(unsafe.Pointer(&latitudes[0])), (*C.size_t)(unsafe.Pointer(&ny)))
@@ -174,7 +166,7 @@ func ProcessGRIB(gribData []byte) GRIBFile {
 			// }
 
 			parsedGrib := GRIBFile{
-				Type:               GRIBTypeLookup[gribType],
+				Type:               gribType,
 				Nx:                 int(nx),
 				Ny:                 int(ny),
 				La1:                la1,

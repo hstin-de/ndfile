@@ -7,23 +7,9 @@ import (
 
 type DataType int32
 
-const (
-	TYPE_TEMPERATURE DataType = iota
-)
-
-var dataTypeNames = map[DataType]string{
-	TYPE_TEMPERATURE: "TEMPERATURE",
-}
-
-func (d DataType) String() string {
-	if name, ok := dataTypeNames[d]; ok {
-		return name
-	}
-	return "Unknown DataType"
-}
 
 type NDFileHeader struct {
-	Type                  DataType
+	Type                  int32
 	La1                   float64
 	La2                   float64
 	Lo1                   float64

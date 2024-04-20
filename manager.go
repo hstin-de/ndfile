@@ -190,5 +190,5 @@ func (nd *NDFileManager) getFileName(grib GRIBFile) string {
 	utcTime := grib.ReferenceTime.UTC()
 	daysSinceEpoch := int(utcTime.Sub(time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)).Hours() / 24)
 
-	return path.Join(nd.RootPath, fmt.Sprintf("%s_%d.nd", grib.Type.String(), daysSinceEpoch))
+	return path.Join(nd.RootPath, fmt.Sprintf("%d_%d.nd", grib.Type, daysSinceEpoch))
 }
