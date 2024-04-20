@@ -39,6 +39,34 @@ func (f NDFile) GetData(latIndex, lngIndex int) ([]int16, error) {
 	return buffer, nil
 }
 
+
+func (f NDFile) GetIndex(lat, lng float64) (int, int) {
+	tolerance := f.Dx / 2
+
+	lat1 := lat - tolerance
+	lat2 := lat + tolerance
+	lon1 := lng - tolerance
+	lon2 := lng + tolerance
+
+	var latIndex, lngIndex int
+
+	for i, lat := range f.DistinctLatitudes {
+		if lat >= lat1 && lat <= lat2 {
+			for j, lon := range f.DistinctLongitudes {
+				if lon >= lon1 && lon <= lon2 {
+					latIndex = i
+					lngIndex = j
+					break
+				}
+			}
+		}
+	}
+
+	return latIndex, lngIndex
+}
+
+
+
 func PreFetch(filename string) NDFile {
 
 	file, err := os.Open(filename)
