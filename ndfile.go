@@ -3,7 +3,6 @@ package ndfile
 import (
 	"encoding/binary"
 	"io"
-	"log"
 	"os"
 )
 
@@ -39,7 +38,6 @@ func (f NDFile) GetData(latIndex, lngIndex int) ([]int16, error) {
 	return buffer, nil
 }
 
-
 func (f NDFile) GetIndex(lat, lng float64) (int, int) {
 	tolerance := f.Dx / 2
 
@@ -65,42 +63,40 @@ func (f NDFile) GetIndex(lat, lng float64) (int, int) {
 	return latIndex, lngIndex
 }
 
-
-
-func PreFetch(filename string) NDFile {
+func PreFetch(filename string) (NDFile, error) {
 
 	file, err := os.Open(filename)
 	if err != nil {
-		log.Fatal("Error opening file: ", err)
+		return NDFile{}, err
 	}
 
 	var headerLength int64
 	err = binary.Read(file, binary.LittleEndian, &headerLength)
 	if err != nil {
-		log.Fatal("Error reading header length: ", err)
+		return NDFile{}, err
 	}
 
 	headerBytes := make([]byte, headerLength)
 
 	_, err = file.Seek(8, 0)
 	if err != nil {
-		log.Fatal("Error seeking to header: ", err)
+		return NDFile{}, err
 	}
 
 	_, err = file.Read(headerBytes)
 	if err != nil {
-		log.Fatal("Error reading header: ", err)
+		return NDFile{}, err
 	}
 
 	fh := &NDFileHeader{}
 	err = fh.Deserialize(headerBytes)
 	if err != nil {
-		log.Fatal("Unmarshaling error: ", err)
+		return NDFile{}, err
 	}
 
 	return NDFile{
 		NDFileHeader: fh,
 		File:         file,
 		HeaderLength: headerLength + 8,
-	}
+	}, nil
 }

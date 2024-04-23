@@ -110,8 +110,6 @@ func (nd *NDFileManager) AddToNDFile(fileName string, grib GRIBFile) {
 
 	indexOfInterval := (unixTsOfGrib - unixStartOfDay) / (int64(nd.TimeIntervalInMinutes) * 60)
 
-	log.Println("Need to insert at index: ", indexOfInterval)
-
 	if (unixTsOfGrib-unixStartOfDay)%(int64(nd.TimeIntervalInMinutes)*60) != 0 {
 		log.Fatal("Reference time of GRIB file is not a multiple of the time interval in minutes")
 	}
