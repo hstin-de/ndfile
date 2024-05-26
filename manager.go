@@ -104,7 +104,6 @@ func (nd *NDFileManager) CreateNDFile(fileName string, grib GRIBFile) {
 }
 
 func (nd *NDFileManager) AddToNDFile(fileName string, grib GRIBFile) {
-
 	unixTsOfGrib := grib.ReferenceTime.Unix()
 	unixStartOfDay := unixTsOfGrib - (unixTsOfGrib % 86400)
 
@@ -137,30 +136,46 @@ func (nd *NDFileManager) AddToNDFile(fileName string, grib GRIBFile) {
 
 	existingData := data[headerLength+8:]
 
-	var completeFile bytes.Buffer
+	// Write updated header back to the file
+	file, err := os.OpenFile(fileName, os.O_RDWR, 0644)
+	if err != nil {
+		log.Fatal("Error opening file: ", err)
+	}
+	defer file.Close()
 
-	binary.Write(&completeFile, binary.LittleEndian, int64(len(headerBytes)))
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		log.Fatal("Error seeking to beginning of file: ", err)
+	}
 
-	completeFile.Write(headerBytes)
+	binary.Write(file, binary.LittleEndian, int64(len(headerBytes)))
+	_, err = file.Write(headerBytes)
+	if err != nil {
+		log.Fatal("Error writing header: ", err)
+	}
 
 	dataArrayLength := int64((24 * 60) / nd.TimeIntervalInMinutes)
 
 	for i := int64(0); i < int64(fh.Nx*fh.Ny); i++ {
-
 		existingDataStart := i * dataArrayLength * 2
 
 		buffer := make([]int16, dataArrayLength)
 		binary.Read(bytes.NewReader(existingData[existingDataStart:existingDataStart+dataArrayLength*2]), binary.LittleEndian, &buffer)
 
 		buffer[indexOfInterval] = int16(grib.DataValues[i] * 100)
-		binary.Write(&completeFile, binary.LittleEndian, buffer)
-	}
 
-	err = os.WriteFile(fileName, completeFile.Bytes(), 0644)
-	if err != nil {
-		log.Fatal("Error writing data to file: ", err)
-	}
+		// Write only the modified byte back to the file
+		modifiedBytePosition := headerLength + 8 + existingDataStart + indexOfInterval*2
+		_, err = file.Seek(modifiedBytePosition, 0)
+		if err != nil {
+			log.Fatal("Error seeking to byte position: ", err)
+		}
 
+		err = binary.Write(file, binary.LittleEndian, buffer[indexOfInterval])
+		if err != nil {
+			log.Fatal("Error writing byte: ", err)
+		}
+	}
 }
 
 func checkFileExists(fileName string) bool {
